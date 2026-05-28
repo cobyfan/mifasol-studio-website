@@ -7,7 +7,17 @@ const courseDetails = document.querySelectorAll("[data-course-detail]");
 const courseSelect = document.querySelector("[data-course-select]");
 const contactSection = document.querySelector("#contact");
 const detailSection = document.querySelector("#course-details");
+const carousel = document.querySelector("[data-carousel]");
+const carouselSlides = carousel ? [...carousel.querySelectorAll(".carousel-slide")] : [];
+const carouselDots = carousel?.querySelector("[data-carousel-dots]");
+const carouselPrev = carousel?.querySelector("[data-carousel-prev]");
+const carouselNext = carousel?.querySelector("[data-carousel-next]");
+const feeTabs = document.querySelectorAll("[data-fee-tab]");
+const feePanels = document.querySelectorAll("[data-fee-panel]");
+const faqItems = document.querySelectorAll(".faq-list details");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let activeSlide = 0;
+let carouselTimer;
 
 function syncHeader() {
   header.classList.toggle("is-scrolled", window.scrollY > 20);
@@ -30,7 +40,7 @@ function scrollToElement(element) {
 function setupReveal() {
   const revealItems = [
     ...document.querySelectorAll(
-      ".section-heading, .intro-card, .course-filter, .course-card, .detail-grid details, .fee-card, .pathway article, .mini-grid article, .reason-grid article, .results-layout > *, .teacher-grid article, .credentials-panel, .about-image, .about-copy, .faq-list details, .contact-panel > *"
+      ".section-heading, .intro-card, .course-filter, .course-card, .detail-grid details, .fee-card, .pathway-photo, .pathway article, .mini-grid article, .reason-grid article, .results-carousel, .snapshot-card, .teacher-grid article, .credentials-panel, .about-image, .about-copy, .faq-list details, .contact-panel > *"
     ),
   ];
 
@@ -121,8 +131,101 @@ function handleCourseAction(event) {
   scrollToElement(detailSection);
 }
 
+function showSlide(index) {
+  if (!carouselSlides.length) return;
+
+  activeSlide = (index + carouselSlides.length) % carouselSlides.length;
+
+  carouselSlides.forEach((slide, slideIndex) => {
+    slide.classList.toggle("is-active", slideIndex === activeSlide);
+  });
+
+  carouselDots?.querySelectorAll("button").forEach((dot, dotIndex) => {
+    const isActive = dotIndex === activeSlide;
+    dot.classList.toggle("is-active", isActive);
+    dot.setAttribute("aria-current", isActive ? "true" : "false");
+  });
+}
+
+function startCarousel() {
+  if (reduceMotion.matches || carouselSlides.length < 2) return;
+
+  window.clearInterval(carouselTimer);
+  carouselTimer = window.setInterval(() => {
+    showSlide(activeSlide + 1);
+  }, 4800);
+}
+
+function setupCarousel() {
+  if (!carousel || !carouselSlides.length || !carouselDots) return;
+
+  carouselSlides.forEach((_, index) => {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.setAttribute("aria-label", `前往第 ${index + 1} 張成果`);
+    dot.addEventListener("click", () => {
+      showSlide(index);
+      startCarousel();
+    });
+    carouselDots.append(dot);
+  });
+
+  carouselPrev?.addEventListener("click", () => {
+    showSlide(activeSlide - 1);
+    startCarousel();
+  });
+
+  carouselNext?.addEventListener("click", () => {
+    showSlide(activeSlide + 1);
+    startCarousel();
+  });
+
+  carousel.addEventListener("mouseenter", () => window.clearInterval(carouselTimer));
+  carousel.addEventListener("mouseleave", startCarousel);
+  carousel.addEventListener("focusin", () => window.clearInterval(carouselTimer));
+  carousel.addEventListener("focusout", startCarousel);
+
+  showSlide(0);
+  startCarousel();
+}
+
+function setupFeeTabs() {
+  feeTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const target = tab.dataset.feeTab;
+
+      feeTabs.forEach((button) => {
+        const isActive = button === tab;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-selected", String(isActive));
+      });
+
+      feePanels.forEach((panel) => {
+        const isActive = panel.dataset.feePanel === target;
+        panel.classList.toggle("is-active", isActive);
+        panel.hidden = !isActive;
+      });
+    });
+  });
+}
+
+function setupFaqAccordion() {
+  faqItems.forEach((item) => {
+    item.addEventListener("toggle", () => {
+      if (!item.open) return;
+
+      faqItems.forEach((otherItem) => {
+        if (otherItem !== item) otherItem.open = false;
+      });
+    });
+  });
+}
+
 syncHeader();
 setupReveal();
+setupCarousel();
+setupFeeTabs();
+setupFaqAccordion();
 
 window.addEventListener("scroll", syncHeader, { passive: true });
 
