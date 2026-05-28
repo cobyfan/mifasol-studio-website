@@ -12,9 +12,6 @@ const carouselSlides = carousel ? [...carousel.querySelectorAll(".carousel-slide
 const carouselDots = carousel?.querySelector("[data-carousel-dots]");
 const carouselPrev = carousel?.querySelector("[data-carousel-prev]");
 const carouselNext = carousel?.querySelector("[data-carousel-next]");
-const feeTabs = document.querySelectorAll("[data-fee-tab]");
-const feePanels = document.querySelectorAll("[data-fee-panel]");
-const faqItems = document.querySelectorAll(".faq-list details");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let activeSlide = 0;
 let carouselTimer;
@@ -189,43 +186,9 @@ function setupCarousel() {
   startCarousel();
 }
 
-function setupFeeTabs() {
-  feeTabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const target = tab.dataset.feeTab;
-
-      feeTabs.forEach((button) => {
-        const isActive = button === tab;
-        button.classList.toggle("is-active", isActive);
-        button.setAttribute("aria-selected", String(isActive));
-      });
-
-      feePanels.forEach((panel) => {
-        const isActive = panel.dataset.feePanel === target;
-        panel.classList.toggle("is-active", isActive);
-        panel.hidden = !isActive;
-      });
-    });
-  });
-}
-
-function setupFaqAccordion() {
-  faqItems.forEach((item) => {
-    item.addEventListener("toggle", () => {
-      if (!item.open) return;
-
-      faqItems.forEach((otherItem) => {
-        if (otherItem !== item) otherItem.open = false;
-      });
-    });
-  });
-}
-
 syncHeader();
 setupReveal();
 setupCarousel();
-setupFeeTabs();
-setupFaqAccordion();
 
 window.addEventListener("scroll", syncHeader, { passive: true });
 
